@@ -47,7 +47,6 @@ module MacCurl
         MacCurl::Logging.logger.debug{ "Making request to: #{url}, api_key_signed: #{api_key_signed?}, mac_signed: #{mac_signed?}" }
 
         status, headers, body = fetch_response(connection)
-        p headers
         STDOUT.puts body
       end
 
