@@ -1,0 +1,235 @@
+#!/usr/bin/env ruby
+require 'mac_curl'
+require 'trollop'
+
+config = nil
+begin
+  config_file = MacCurl::Config.find
+  unless config_file
+    config_file = MacCurl::Config.write_default
+  end
+  config = MacCurl::Config.load(config_file)
+rescue => e
+  puts "Unable to load/create the config file - bailing out!"
+  raise e
+end
+
+MacCurl::Logging.logger.sev_threshold = Logger.const_get(config["log_level"].upcase)
+
+option_string = ARGV
+
+SUB_COMMANDS = %w(request credentials config)
+global_opts = Trollop::options do
+  version "mac_curl #{MacCurl::VERSION}"
+  banner <<-EOS
+A CURL like script to do MAC signed requests to urls.
+
+Usage:
+       mac_curl [global_options] <command> [options]
+
+where <command> can be one of: #{SUB_COMMANDS.join(", ")}
+and where [global_options] are (command options are contained in the help for each command):
+
+EOS
+  stop_on SUB_COMMANDS
+end
+
+cmd = option_string.shift # get the subcommand
+cmd_opts = case cmd
+           when "request" # parse delete options
+             Trollop::options do
+               banner "Perform a mac signed request to the given url"
+
+               opt :request_method, "The HTTP request method to use for request (GET, POST)", :short => '-X', :long => '--request', :type => :string
+               opt :header, "HTTP header to use for request as a colon separated key value pair (may be used multiple times)", :short => '-H', :long => '--header', :multi => true, :type => :string
+               opt :'api-signature', "Include the API sigature header 'X-PlayUp-Api-Key'", :short => :none, :long => '--api-signature', :default => true, :required => false, :type => :boolean
+               opt :'mac-signature', "Include MAC authentication", :short => :none, :long => '--mac-signature', :default => true, :required => false, :type => :boolean
+               opt :api_key, "The API key to use", :short => :none, :long => '--api-key', :type => :string
+               opt :api_secret, "The API secret to use", :short => :none, :long => '--api-secret', :type => :string
+               opt :mac_key, "The MAC key to use", :short => :none, :long => '--mac-key', :type => :string
+               opt :mac_secret, "The MAC secret to use", :short => :none, :long => '--mac-secret', :type => :string
+             end
+           when "credentials"
+             Trollop::options do
+               opt :api_key, "The API key to use", :short => :none, :long => '--api-key', :type => :string
+               opt :api_secret, "The API secret to use", :short => :none, :long => '--api-secret', :type => :string
+               opt :direct, "Assume that the url given is that of a credentials server, so no need to discover it", :short => :none, :long => '--direct', :type => :boolean, :default => false, :required => false
+               opt :add_to_config, "If we get back some credentials, add them to our config file", :short => '-a', :long => '--add-to-config', :type => :boolean, :default => false, :required => false
+               banner "Fetch some MAC credentials given a url we want to hit with said credentials"
+             end
+           when "config"
+             Trollop::options do
+               banner "Read or create the currently active configuration file"
+               opt :read, "Show the currently active config file", :short => '-r', :long => '--read', :type => :boolean, :default => true, :required => false
+               opt :write, "Write a default config file to a given path or home directory if no path is given", :short => '-w', :long => '--write', :type => :boolean, :default => false, :required => false
+             end
+           else
+             Trollop::die "unknown subcommand #{cmd.inspect}"
+           end
+
+begin
+  if cmd == "request"
+    MacCurl::Commands::Request.for(config, global_opts, cmd_opts, option_string)
+  elsif cmd == "credentials"
+    #bundle exec bin/mac_curl credentials --api-key="com.playup.ios.live" --api-secret="QwFHK6n3WAqhDPiz" http://localhost:8080/v2/clients
+    #bundle exec bin/mac_curl credentials --api-key="com.playup.ios.live" --api-secret="QwFHK6n3WAqhDPiz" --direct http://localhost:9090/credentials
+    MacCurl::Commands::Credentials.for(config, global_opts, cmd_opts, option_string)
+  elsif cmd == "config"
+    #bundle exec bin/mac_curl config -r
+    #bundle exec bin/mac_curl config -w ./
+    MacCurl::Commands::Config.for(config, global_opts, cmd_opts, option_string)
+  end
+rescue => e
+  raise e
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#require 'gli'
+#require 'mac_curl'
+
+#include GLI::App
+
+#program_desc 'A CURL like script to do MAC signed requests to urls'
+
+#version MacCurl::VERSION
+
+#desc 'Specify which environment we are working with e.g. development, staging, production'
+#default_value 'development'
+#arg_name 'environment'
+#flag [:e,:environment]
+
+#desc 'Perform a request with a MAC signature'
+#arg_name 'The url we are hitting'
+#command :request do |c|
+  #c.desc 'The request method to use for this request e.g. GET, POST'
+  #c.default_value 'GET'
+  #c.arg_name 'request_method'
+  #c.flag [:X, :request]
+
+  #c.desc 'The http headers for this request as a comma separated list of colon separated key value pairs, where the key is a header name and the value is the header value'
+  #c.arg_name '["header_key1:value1","header_key2:value2"...]', :multiple
+  #c.flag [:H, :header]
+
+  #c.action do |global_options, options, args|
+    #raise "Need to supply a url to make a request to" if args.empty?
+    #MacCurl::Request.new(global_options[:environment], options[:request], options[:header], args.first).with_api_and_mac_auth
+  #end
+#end
+
+#desc 'Work with the configuration file'
+#command :config do |c|
+  #c.desc 'Create a configuration file'
+  #c.command :create do |sc|
+    #sc.switch [:f, :force], :negatable => false, :desc => "Force the creation of the config file"
+
+    #sc.action do |global_options, options, args|
+      #file_path = File.join(Dir.pwd, MacCurl::Config.file_name)
+      #supplied_path = File.join(File.expand_path(args.first), MacCurl::Config.file_name) if args.first
+      #file_path = supplied_path || file_path
+      #if options[:force] || !MacCurl::Config.exists?(file_path)
+        #MacCurl::Config.create(file_path)
+      #else
+        #raise "Not overwriting existing config file #{file_path}, use --force to override"
+      #end
+    #end
+  #end
+
+  #c.desc 'View the currently active configuration file'
+  #c.command :view do |sc|
+    #sc.action do |global_options, options, args|
+      #begin
+        #path = MacCurl::Config.find
+        #p path
+      #rescue => e
+        #raise e
+      #end
+    #end
+  #end
+
+  #c.default_command :view
+#end
+
+##desc 'Describe set_api_credentials here'
+##arg_name 'Describe arguments to set_api_credentials here'
+##command :set_api_credentials do |c|
+  ##c.action do |global_options,options,args|
+    ##puts "set_api_credentials command ran"
+  ##end
+##end
+
+##desc 'Describe new_mac_credentials here'
+##arg_name 'Describe arguments to new_mac_credentials here'
+##command :new_mac_credentials do |c|
+  ###c.desc 'Describe a switch to new_mac_credentials'
+  ###c.switch :s
+
+  ###c.desc 'Describe a flag to new_mac_credentials'
+  ###c.default_value 'default'
+  ###c.flag :f
+  ##c.action do |global_options,options,args|
+
+    ### Your command logic here
+
+    ### If you have any errors, just raise them
+    ### raise "that command made no sense"
+
+    ##puts "new_mac_credentials command ran"
+  ##end
+##end
+
+#pre do |global,command,options,args|
+  ## Pre logic here
+  ## Return true to proceed; false to abort and not call the
+  ## chosen command
+  ## Use skips_pre before a command to skip this block
+  ## on that command only
+  #true
+#end
+
+#post do |global,command,options,args|
+  ## Post logic here
+  ## Use skips_post before a command to skip this
+  ## block on that command only
+#end
+
+#on_error do |exception|
+  ## Error logic here
+  ## return false to skip default error handling
+  #true
+#end
+
+#exit run(ARGV)

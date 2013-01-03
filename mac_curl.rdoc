@@ -1,0 +1,5 @@
+= mac_curl
+
+Generate this with
+    mac_curl rdoc
+After you have described your command line interface
