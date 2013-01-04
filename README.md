@@ -136,7 +136,6 @@ If you have a set of mac credentials you can obviously pass those on the command
 - in the request command we can choose to respect the caching rules
 - should have an option to keep track of the history of executing the script
 - add the ability to have a set of steps run one after another as a command
-- add a readme description of how to use the script
 
 
 
