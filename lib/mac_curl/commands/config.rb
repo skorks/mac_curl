@@ -1,18 +1,11 @@
 module MacCurl
   module Commands
     class Config < MacCurl::Command
-      class << self
-        def for(config, global_options, command_options, arguments)
-          super if defined? super
-          self.new(config, arguments.last, MacCurl::Hash.deep_merge(global_options, command_options)).execute
-        end
-      end
+      attr_reader :path, :read, :write
 
-      attr_reader :read, :write, :config, :path
-
-      def initialize(config, path, options = {})
-        @config = config
-        @path = path
+      def initialize(config, arguments, options = {})
+        super if defined? super
+        @path = arguments.last
         @read = options[:read]
         @write = options[:write]
       end

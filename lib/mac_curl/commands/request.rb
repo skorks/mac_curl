@@ -10,20 +10,15 @@ module MacCurl
       include MacCurl::Connections
       include MacCurl::Requests
 
-      class << self
-        def for(config, global_options, command_options, arguments)
-          super if defined? super
-          if arguments.last.nil?
-            raise "Need a URL to make a request to"
-          end
-          self.new(config, arguments.last, MacCurl::Hash.deep_merge(global_options, command_options)).execute
-        end
-      end
+      attr_reader :url, :request_method, :headers, :parsed_url, :api_key, :api_secret, :mac_key, :mac_secret
 
-      attr_reader :request_method, :headers, :parsed_url, :api_key, :api_secret, :add_to_config, :mac_key, :mac_secret
-
-      def initialize(config, url, options = {})
+      def initialize(config, arguments, options = {})
         super if defined? super
+
+        if arguments.last.nil?
+          raise "Need a URL to make a request to"
+        end
+        @url = arguments.last
         @parsed_url = URI(@url)
         @request_method = options[:request_method] || @config.request_method || "GET"
         @headers = options[:header].inject({}) do |accumulator, header_string|
@@ -54,7 +49,6 @@ module MacCurl
         options = {:headers => headers}
         response = api_key_signed? ? api_signed_request_for(request_method, api_key, api_secret, parsed_url.path, connection, options) : request_for(request_method, parsed_url.path, connection, options)
         ensure_mac_credentials_valid(response)
-        #response_body = JSON.parse(response.body)
         [response.status, response.headers, response.body]
       rescue => e
         MacCurl::Logging.logger.error{ "Error when fetching data from #{url}: #{e.message}" }

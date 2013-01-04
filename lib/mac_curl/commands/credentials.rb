@@ -5,20 +5,15 @@ module MacCurl
       include MacCurl::Connections
       include MacCurl::Requests
 
-      class << self
-        def for(config, global_options, command_options, arguments)
-          super if defined? super
-          if arguments.last.nil?
-            raise "Need a URL to make a request to"
-          end
-          self.new(config, arguments.last, MacCurl::Hash.deep_merge(global_options, command_options)).execute
-        end
-      end
+      attr_reader :url, :parsed_url, :api_key, :api_secret, :add_to_config
 
-      attr_reader :parsed_url, :api_key, :api_secret, :add_to_config
-
-      def initialize(config, url, options = {})
+      def initialize(config, arguments, options = {})
         super if defined? super
+
+        if arguments.last.nil?
+          raise "Need a URL to make a request to"
+        end
+        @url = arguments.last
         @parsed_url = URI(@url)
         @api_key = options[:api_key] || @config.api_key
         @api_secret = options[:api_secret] || @config.api_secret

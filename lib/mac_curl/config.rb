@@ -61,11 +61,16 @@ module MacCurl
         }
       end
 
-      def load(file_path = nil)
+      def load_config(file_path = nil)
         config_path = file_path || find
         json = File.read(config_path)
         config_hash = JSON.parse(json)
         self.new(config_hash, file_path)
+      end
+
+      def find_and_load
+        config_path = find
+        load_config(config_path)
       end
     end
 
