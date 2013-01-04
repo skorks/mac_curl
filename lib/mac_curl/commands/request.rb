@@ -10,7 +10,7 @@ module MacCurl
       include MacCurl::Connections
       include MacCurl::Requests
 
-      attr_reader :url, :request_method, :headers, :parsed_url, :api_key, :api_secret, :mac_key, :mac_secret
+      attr_reader :url, :request_method, :headers, :parsed_url, :api_key, :api_secret, :mac_key, :mac_secret, :request_body
 
       def initialize(config, arguments, options = {})
         super if defined? super
@@ -32,6 +32,7 @@ module MacCurl
         @api_secret = options[:api_secret] || @config.api_secret
         @mac_key = options[:mac_key] || @config.current_mac_key
         @mac_secret = options[:mac_secret] || @config.current_mac_secret
+        @request_body = options[:data] || @config.request_body
       end
 
       def execute
@@ -47,6 +48,7 @@ module MacCurl
 
       def fetch_response(connection)
         options = {:headers => headers}
+        options = options.merge!(:body => request_body) #if ["POST", "PUT"].include? request_method.upcase.to_s
         response = api_key_signed? ? api_signed_request_for(request_method, api_key, api_secret, parsed_url.path, connection, options) : request_for(request_method, parsed_url.path, connection, options)
         ensure_mac_credentials_valid(response)
         [response.status, response.headers, response.body]

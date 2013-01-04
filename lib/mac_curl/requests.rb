@@ -17,6 +17,7 @@ module MacCurl
         req.url path
         add_api_key_header(req, api_key, api_secret, path)
         add_http_headers(req, options[:headers] || {})
+        add_body(req, options[:body], "POST")
         log_request(req)
       end
       response
@@ -27,6 +28,7 @@ module MacCurl
         req.url path
         add_api_key_header(req, api_key, api_secret, path)
         add_http_headers(req, options[:headers] || {})
+        add_body(req, options[:body], request_method)
         log_request(req)
       end
       response
@@ -36,6 +38,7 @@ module MacCurl
       response = connection.send(request_method.downcase.to_sym) do |req|
         req.url path
         add_http_headers(req, options[:headers] || {})
+        add_body(req, options[:body], request_method)
         log_request(req)
       end
       response
@@ -50,6 +53,12 @@ module MacCurl
     def add_http_headers(req, headers)
       headers.each_pair do |header, value|
         req.headers[header] = value
+      end
+    end
+
+    def add_body(req, body_hash, request_method)
+      if ["POST", "PUT"].include? request_method.upcase.to_s
+        req.body = body_hash.to_json
       end
     end
 

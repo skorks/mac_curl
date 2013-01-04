@@ -48,16 +48,6 @@ module MacCurl
           },
           "api_key" => "com.playup.ios.live",
           "api_secret" => "QwFHK6n3WAqhDPiz"
-          #"mac_credentials" => {
-            #"http://blah.com/yadda" => {
-              #"id" => "Pz9EogPecWPPWa3AVzximdvtVPuxxNex",
-              #"secret" => "@pQ4qv+peV44K;la<gN+Ruo-:NCY>2nEDG:aD6DMo+v2jHkZtAn<ff1hYfejC:Ibe"
-            #}
-          #},
-          #"request_body" => {
-            #":type" => "application/vnd.playup.application.invitation.request+json",
-            #"app_identifier" => "live"
-          #}
         }
       end
 
@@ -128,6 +118,10 @@ module MacCurl
 
     def headers
       @config_hash["headers"] || {}
+    end
+
+    def request_body
+      @config_hash["request_body"] || {}
     end
   end
 end

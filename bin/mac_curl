@@ -59,9 +59,13 @@ EOS
       opt :api_secret, "The API secret to use", :short => :none, :long => '--api-secret', :type => :string
       opt :mac_key, "The MAC key to use", :short => :none, :long => '--mac-key', :type => :string
       opt :mac_secret, "The MAC secret to use", :short => :none, :long => '--mac-secret', :type => :string
+      opt :data, "The data to send as a body of a post request", :short => '-d', :long => '--data', :type => :string
     end
 
     command.action do |global_options, command_options, arguments|
+      #bundle exec bin/mac_curl request -X HEAD -H "Content-Type: application/json","Accept-Language: zh-CN","Accept: application/json, application/vnd.playup.*, */*" http://localhost:8080/v2/clients/live
+  #bundle exec bin/mac_curl request -H "Content-Type: application/json","Accept-Language: zh-CN","Accept: application/json, application/vnd.playup.*, */*" --no-api-signature --no-mac-signature http://localhost:8080/sections/welcome
+  #bundle exec bin/mac_curl request --api-key="abc" --api-secret="123" --mac-key="xxx" --mac-secret="yyy" http://localhost:8080/v2/clients/live
       MacCurl::Commands::Request.for(global_options, command_options, arguments)
     end
   end
